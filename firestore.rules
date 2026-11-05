@@ -1,0 +1,63 @@
+rules_version = '2';
+// กฎความปลอดภัย Excise Strategy Watch
+// - ทุกคน (ล็อกอินแบบไม่ระบุตัวตนอัตโนมัติ) อ่านผลรวมและความเห็นได้
+// - แต่ละคนเขียน/แก้ได้เฉพาะคะแนนของตัวเอง ซ่อนหรือปักหมุดเองไม่ได้
+// - เนื้อหาแผนและการตั้งค่า แก้ได้เฉพาะผู้ดูแลที่มีอีเมลอยู่ในรายชื่อ admins
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email != null
+        && exists(/databases/$(db)/documents/admins/$(request.auth.token.email));
+    }
+    function validVote(id) {
+      let d = request.resource.data;
+      return d.uid == request.auth.uid
+        && d.strategyId is string && d.strategyId.size() <= 10
+        && id == request.auth.uid + '_' + d.strategyId
+        && d.stars is int && d.stars >= 1 && d.stars <= 5
+        && d.priority in ['now', 'plan', 'adjust']
+        && d.initiative is int && d.initiative >= 0 && d.initiative < 20
+        && d.comment is string && d.comment.size() <= 1000
+        && d.hasComment == (d.comment.size() > 0)
+        && d.unitId is string && d.unitId.size() <= 20
+        && d.updatedAt is int;
+    }
+
+    // เนื้อหาแผน / การตั้งค่า / รายชื่อหน่วยงาน
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // รายชื่อผู้ดูแล (เพิ่มเองใน Firebase Console เท่านั้น)
+    match /admins/{email} {
+      allow read: if signedIn() && request.auth.token.email == email;
+      allow write: if false;
+    }
+
+    // ผู้ร่วม: 1 คน = 1 เอกสาร เก็บแค่หน่วยงาน
+    match /participants/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['unitId', 'updatedAt'])
+        && request.resource.data.unitId is string
+        && request.resource.data.unitId.size() <= 20;
+    }
+
+    // คะแนนและข้อเสนอแนะ
+    match /votes/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validVote(id)
+        && request.resource.data.hidden == false
+        && request.resource.data.featured == false;
+      allow update: if (signedIn() && resource.data.uid == request.auth.uid && validVote(id)
+          && request.resource.data.hidden == resource.data.hidden
+          && request.resource.data.featured == resource.data.featured
+          && request.resource.data.createdAt == resource.data.createdAt)
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden', 'featured']));
+      allow delete: if false;
+    }
+  }
+}
