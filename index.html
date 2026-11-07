@@ -420,10 +420,7 @@ function SwDownloads(){const[msg,setMsg]=q.useState({}),canShare=!window.claude;
  const share=async f=>{const url=location.origin+"/"+f.file;try{if(navigator.share){await navigator.share({title:f.title,url});return}await navigator.clipboard.writeText(url);setMsg(m=>({...m,[f.id]:1}));setTimeout(()=>setMsg(m=>({...m,[f.id]:0})),2500)}catch(x){}};
  return swH("section",{id:"sw-downloads",className:"sw-wrap sw-dlsec"},
   swH("div",{className:"sw-dlhead"},swH("div",null,swH("div",{className:"sw-eyebrow"},swH(SwIcon,{n:"download",c:"sw-ic-sm"}),"มุมดาวน์โหลด"),swH("h2",{className:"sw-h2"},"พูดเรื่องเดียวกันทั้งประเทศ"),swH("p",{className:"sw-lead"},"ดาวน์โหลด พิมพ์ หรือส่งต่อได้ทันที ทุกไฟล์ใช้ข้อความชุดเดียวกัน"))),
-  swH("a",{className:"sw-listen",href:SW_LISTEN,target:"_blank",rel:"noopener noreferrer"},
-   swH("span",{className:"sw-listen-ic"},swH(SwIcon,{n:"headphones"}),swH("i"),swH("i"),swH("i")),
-   swH("span",{className:"sw-listen-t"},swH("small",null,"ไม่มีเวลาอ่าน? ฟังแทนได้"),swH("b",null,"ฟังสรุปร่างแผนยุทธศาสตร์ 2570–2574"),swH("span",null,"คำอธิบายแผนแบบเสียงพูด ผ่าน NotebookLM · ฟังระหว่างเดินทางได้")),
-   swH("span",{className:"sw-listen-btn"},"ฟังเลย",swH(SwIcon,{n:"ext",c:"sw-ic-sm"}))),
+  swH(SwAudio,null),
   swH("div",{className:"sw-dlgrid"},...SW_FILES.map(f=>swH("article",{key:f.id,className:"sw-dlc is-"+f.shape},
    swH("button",{type:"button",className:"sw-dlthumb",onClick:()=>swSave(f.data,f.file),"aria-label":"ดาวน์โหลด "+f.title},swH("img",{src:f.thumb,alt:"ตัวอย่าง "+f.title,loading:"lazy"}),f.tag&&swH("em",null,f.tag)),
    swH("div",{className:"sw-dlb"},swH("small",null,f.meta),swH("h3",null,f.title),swH("b",null,f.sub),swH("p",null,f.desc),
@@ -447,6 +444,35 @@ function SwWhyModal({i,onClose}){const{content:n,pillar:pl}=Wt(),d=swData(n),f=i
     swH("button",{type:"button",className:"sw-dl is-ghost",disabled:i<=0,onClick:()=>window.dispatchEvent(new CustomEvent("sw-why",{detail:i-1}))},swH(SwIcon,{n:"back",c:"sw-ic-sm"}),"ก่อนหน้า"),
     swH("span",null,i+1," / ",d.fs.length),
     swH("button",{type:"button",className:"sw-dl is-ghost",disabled:i>=d.fs.length-1,onClick:()=>window.dispatchEvent(new CustomEvent("sw-why",{detail:i+1}))},"ถัดไป",swH(SwIcon,{n:"chev",c:"sw-ic-sm"}))))))}
+const SW_AUDIO="plan-audio.mp4";
+Object.assign(swI,{play:"M7 4.5v15l12-7.5z",pause:"M7 4h3.5v16H7zM13.5 4H17v16h-3.5z",stop:"M6 6h12v12H6z",doc:"M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h6"});
+const swFmt=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function SwAudio(){const a=q.useRef(null),box=q.useRef(null),[on,setOn]=q.useState(!1),[t,setT]=q.useState(0),[d,setD]=q.useState(0),[rate,setRate]=q.useState(1),[sc,setSc]=q.useState(!1),[err,setErr]=q.useState(!1);
+ const S=typeof SW_SCRIPT!=="undefined"?SW_SCRIPT:null,cur=S?S.findIndex(x=>t>=x.s&&t<x.e+.4):-1;
+ q.useEffect(()=>{if(!sc||cur<0||!box.current)return;const el=box.current.querySelector('[data-i="'+cur+'"]');if(el){const b=box.current,top=el.offsetTop-b.clientHeight/3;b.scrollTo({top,behavior:"smooth"})}},[cur,sc]);
+ const toggle=()=>{const x=a.current;if(!x)return;x.paused?x.play().catch(()=>setErr(!0)):x.pause()};
+ const stop=()=>{const x=a.current;if(!x)return;x.pause();x.currentTime=0;setT(0)};
+ const seek=v=>{const x=a.current;if(x&&isFinite(v)){x.currentTime=v;setT(v)}};
+ const cyc=()=>{const r=rate===1?1.25:rate===1.25?1.5:1;setRate(r);a.current&&(a.current.playbackRate=r)};
+ const pct=d?t/d*100:0;
+ return swH("div",{className:"sw-aud"+(on?" is-on":"")},
+  swH("audio",{ref:a,src:SW_AUDIO,preload:"metadata",onPlay:()=>setOn(!0),onPause:()=>setOn(!1),onEnded:()=>{setOn(!1)},onTimeUpdate:x=>setT(x.currentTarget.currentTime),onLoadedMetadata:x=>setD(x.currentTarget.duration),onError:()=>setErr(!0)}),
+  swH("div",{className:"sw-aud-row"},
+   swH("button",{type:"button",className:"sw-aud-play",onClick:toggle,"aria-label":on?"หยุดชั่วคราว":"เล่น"},swH(SwIcon,{n:on?"pause":"play",c:"sw-ic sw-fill"})),
+   swH("div",{className:"sw-aud-main"},
+    swH("div",{className:"sw-aud-t"},swH("small",null,on?"กำลังเล่น":"ไม่มีเวลาอ่าน? ฟังแทนได้"),swH("b",null,"ฟังสรุปร่างแผนยุทธศาสตร์ 2570–2574")),
+    swH("div",{className:"sw-aud-bar"},
+     swH("span",{className:"sw-aud-time"},swFmt(t)),
+     swH("div",{className:"sw-aud-track"},swH("i",{style:{width:pct+"%"}}),swH("input",{type:"range",min:0,max:d||0,step:.1,value:t,onChange:x=>seek(+x.target.value),"aria-label":"เลื่อนตำแหน่งเสียง"})),
+     swH("span",{className:"sw-aud-time"},d?swFmt(d):"--:--"))),
+   swH("div",{className:"sw-aud-ctl"},
+    swH("button",{type:"button",className:"sw-aud-btn",onClick:stop,"aria-label":"หยุด",title:"หยุด"},swH(SwIcon,{n:"stop",c:"sw-ic-sm sw-fill"})),
+    swH("button",{type:"button",className:"sw-aud-btn sw-aud-rate",onClick:cyc,"aria-label":"ความเร็ว "+rate+" เท่า",title:"ความเร็ว"},rate+"×"),
+    S&&swH("button",{type:"button",className:"sw-aud-btn"+(sc?" is-on":""),onClick:()=>setSc(!sc),"aria-pressed":sc,title:"สคริปต์"},swH(SwIcon,{n:"doc",c:"sw-ic-sm"}),swH("span",null,"สคริปต์")))),
+  err&&swH("p",{className:"sw-aud-err"},"เล่นไฟล์เสียงไม่ได้ในเบราว์เซอร์นี้"),
+  S&&sc&&swH("div",{className:"sw-aud-sc",ref:box},
+   swH("p",{className:"sw-aud-note"},"สคริปต์ถอดเสียงอัตโนมัติ · แตะประโยคเพื่อข้ามไปฟังตรงนั้น"),
+   ...S.map((x,i)=>swH("p",{key:i,"data-i":i,className:"sw-aud-line"+(i===cur?" is-cur":i<cur?" is-past":""),onClick:()=>{seek(x.s);a.current&&a.current.paused&&toggle()}},swH("em",null,swFmt(x.s)),x.t))))}
 
 function oS(){const{ready:n}=Wt();return n?m.jsx(lI,{children:m.jsxs(Yr,{element:m.jsx(zI,{}),children:[m.jsx(Yr,{index:!0,element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategies",element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategy/:id",element:m.jsx(GI,{})}),m.jsx(Yr,{path:"about",element:m.jsx(SwAbout,{})}),m.jsx(Yr,{path:"results",element:m.jsx(QI,{})}),m.jsx(Yr,{path:"passport",element:m.jsx(YI,{})}),swAdminOn()&&m.jsx(Yr,{path:"admin",element:m.jsx(ZI,{})}),m.jsx(Yr,{path:"*",element:m.jsx(nf,{})})]})}):m.jsx(Ko,{label:"กำลังเตรียมข้อมูล…"})}function aS(){return m.jsx(gI,{children:m.jsx(jI,{children:m.jsx(oS,{})})})}mT.createRoot(document.getElementById("root")).render(m.jsx(u0.StrictMode,{children:m.jsx(aS,{})}));const lS=()=>{};var Py={};/**
  * @license
@@ -4122,6 +4148,38 @@ button.sw-fcard{text-align:left;cursor:pointer;border:0;padding:0;font:inherit;c
 .sw-flow-go:hover{text-decoration:underline;text-underline-offset:3px}
 .sw-wm{margin:-1.25rem}
 @media (min-width:640px){.sw-wm{margin:-1.75rem}}
+/* ===== Audio player ===== */
+.sw-fill{fill:currentColor;stroke:none}
+.sw-aud{margin-bottom:1rem;padding:1rem 1.2rem;border-radius:18px;color:#fff;background:radial-gradient(80% 160% at 100% 0%,rgba(14,165,233,.45),rgba(14,165,233,0) 60%),linear-gradient(120deg,#0B2A6F,#1E40AF 60%,#2563EB);box-shadow:0 10px 28px rgba(30,64,175,.22)}
+.sw-aud-row{display:flex;align-items:center;gap:1rem}
+.sw-aud-play{display:grid;place-items:center;flex-shrink:0;width:56px;height:56px;border-radius:50%;background:#fff;color:#1E40AF;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .15s ease}
+.sw-aud-play:hover{transform:scale(1.05)}
+.sw-aud-play .sw-ic{width:24px;height:24px}
+.sw-aud:not(.is-on) .sw-aud-play .sw-ic{margin-left:3px}
+.sw-aud-main{flex:1;min-width:0}
+.sw-aud-t small{display:block;font-size:.74rem;font-weight:600;color:#BAE6FD}
+.sw-aud-t b{display:block;font-size:1.05rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw-aud-bar{display:flex;align-items:center;gap:.6rem;margin-top:.45rem}
+.sw-aud-time{font-size:.78rem;font-variant-numeric:tabular-nums;color:#DBEAFE;min-width:2.6rem}
+.sw-aud-time:last-child{text-align:right}
+.sw-aud-track{position:relative;flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.22)}
+.sw-aud-track i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#7DD3FC;pointer-events:none}
+.sw-aud-track input{position:absolute;inset:-8px 0;width:100%;height:22px;opacity:0;cursor:pointer;margin:0}
+.sw-aud-ctl{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.sw-aud-btn{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;min-width:40px;height:40px;padding:0 .7rem;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:.8rem;font-weight:600;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);transition:background .15s ease}
+.sw-aud-btn:hover{background:rgba(255,255,255,.22)}
+.sw-aud-btn.is-on{background:#fff;color:#1E40AF}
+.sw-aud-rate{min-width:52px;font-variant-numeric:tabular-nums}
+.sw-aud-err{margin:.5rem 0 0;font-size:.8rem;color:#FECACA}
+.sw-aud-sc{margin-top:.9rem;max-height:220px;overflow-y:auto;padding:.6rem .8rem;border-radius:12px;background:rgba(3,15,45,.35);scrollbar-width:thin}
+.sw-aud-note{margin:0 0 .4rem;font-size:.72rem;color:#93C5FD}
+.sw-aud-line{display:flex;gap:.6rem;margin:0;padding:.3rem .4rem;border-radius:8px;font-size:.92rem;line-height:1.55;color:rgba(255,255,255,.62);cursor:pointer;transition:color .2s ease,background .2s ease}
+.sw-aud-line em{flex-shrink:0;font-style:normal;font-size:.72rem;color:#93C5FD;padding-top:.2rem;font-variant-numeric:tabular-nums;min-width:2.4rem}
+.sw-aud-line:hover{background:rgba(255,255,255,.06)}
+.sw-aud-line.is-past{color:rgba(255,255,255,.45)}
+.sw-aud-line.is-cur{color:#fff;background:rgba(255,255,255,.12);font-weight:500}
+@media (max-width:767px){.sw-aud-row{flex-wrap:wrap}.sw-aud-main{flex-basis:calc(100% - 72px)}.sw-aud-ctl{width:100%;justify-content:flex-end}}
+@media (max-width:767px){.sw-aud-t b{white-space:normal;font-size:.98rem;line-height:1.35}}
 </style>
   
   
