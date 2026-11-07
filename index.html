@@ -4227,6 +4227,18 @@ button.sw-fcard{text-align:left;cursor:pointer;border:0;padding:0;font:inherit;c
 body.sw-has-mini .sw-content{padding-bottom:90px}
 @media (max-width:1023px){.sw-mplayer{left:12px;right:12px;width:auto;bottom:calc(66px + env(safe-area-inset-bottom,0px))}body.sw-has-mini .sw-main{padding-bottom:140px}}
 @media (prefers-reduced-motion:reduce){.sw-mplayer{animation:none}}
+/* house: align every row across the 5 pillars */
+@supports (grid-template-rows:subgrid){
+ .sw-hcols{grid-template-rows:auto auto auto auto 1fr;row-gap:0}
+ .sw-hcol{display:grid;grid-row:span 5;grid-template-rows:subgrid;gap:0}
+ .sw-hgoal{grid-row:1;margin-bottom:10px;min-height:0}
+ .sw-hpil{grid-row:2 / span 4;display:grid;grid-template-rows:subgrid;row-gap:0}
+ .sw-hen{align-self:start}
+ .sw-hth{min-height:0;align-self:stretch}
+ .sw-hpil ul{align-self:start}
+}
+@supports not (grid-template-rows:subgrid){.sw-hen{min-height:2.6em}.sw-hth{min-height:4.1em}}
+@media (max-width:1180px){@supports (grid-template-rows:subgrid){.sw-hcols{row-gap:12px}}}
 </style>
   
   
