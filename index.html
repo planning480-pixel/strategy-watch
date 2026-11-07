@@ -516,7 +516,7 @@ function SwVisionFeedback(){const{backend:e,content:n,unit:u,units:U,settings:o}
  q.useEffect(()=>{if(!open||!e||!e.feedbackGet)return;setDone(!1);setErr("");
   e.feedbackGet("vision").then(m=>{setMine(m);setStars(m?m.stars:0);setCm(m?m.comment:"")}).catch(()=>{});
   e.feedbackStats("vision").then(setSt).catch(()=>{});e.feedbackList("vision",6).then(setList).catch(()=>{})},[open,e]);
- const save=async()=>{if(!stars||busy)return;setBusy(!0);setErr("");try{const m=await e.feedbackSubmit("vision",{stars,comment:cm},u);setMine(m);setDone(!0);window.dispatchEvent(new Event("sw-vfb-saved"));e.feedbackStats("vision").then(setSt);e.feedbackList("vision",6).then(setList)}catch(x){setErr("ส่งไม่สำเร็จ ลองใหม่อีกครั้ง")}setBusy(!1)};
+ const save=async()=>{if(!stars||busy)return;setBusy(!0);setErr("");try{const m=await e.feedbackSubmit("vision",{stars,comment:cm},u);setMine(m);setDone(!0);window.dispatchEvent(new Event("sw-vfb-saved"));e.feedbackStats("vision").then(setSt);e.feedbackList("vision",6).then(setList)}catch(x){console.error("vision feedback",x);setErr(x&&/permission/i.test(x.code||x.message||"")?"ระบบยังไม่เปิดรับความเห็นวิสัยทัศน์ (ผู้ดูแลต้องอัปเดตกฎฐานข้อมูล Firebase)":"ส่งไม่สำเร็จ ลองใหม่อีกครั้ง"+(x&&x.code?" ("+x.code+")":""))}setBusy(!1)};
  const uName=id=>{const z=U.find(y=>y.id===id);return z?z.short:"ไม่ระบุหน่วยงาน"};
  const labels=["ไม่เห็นด้วย","","กลางๆ","","เห็นด้วยมาก"],closed=o&&o.open===!1;
  return swH(VI,{open,onClose:()=>setOpen(!1)},swH("div",{className:"sw-vf"},
