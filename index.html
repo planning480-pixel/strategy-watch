@@ -238,6 +238,7 @@ function zI(){const{backend:n,myVotes:e,content:t,error:i,settings:o,unit:u}=Wt(
    swH("main",{className:"sw-content"},swH(oI,null)),
    swH("footer",{className:"sw-foot"},swH("img",{src:If,alt:""}),swH("span",null,swH("b",null,"Excise Strategy Watch"),"รับฟังความเห็นบุคลากรต่อร่างแผนยุทธศาสตร์ ปี 2570–2574 · ไม่เก็บชื่อผู้ให้ความเห็น"))),
   swH("nav",{className:"sw-bnav",style:{gridTemplateColumns:`repeat(${nav.length+adm.length},minmax(0,1fr))`},"aria-label":"เมนูหลัก"},...[...nav,...adm].map(p=>swH(il,{key:p.to,to:p.to,end:p.end,className:({isActive:a})=>"sw-bitem"+(a?" is-on":"")},swH(SwIcon,{n:p.ic,c:"sw-ic"}),swH("span",null,p.to==="/passport"?"Passport "+p.badge:p.label)))),
+  swH(SwMiniPlayer,null),
   swH(k0,{open:pk,onClose:()=>setPk(!1)}))}
 
 /* ---------- Unit picker ---------- */
@@ -454,32 +455,51 @@ function SwWhyModal({i,onClose}){const{content:n,pillar:pl}=Wt(),d=swData(n),f=i
 const SW_AUDIO="plan-audio.mp4";
 Object.assign(swI,{play:"M7 4.5v15l12-7.5z",pause:"M7 4h3.5v16H7zM13.5 4H17v16h-3.5z",stop:"M6 6h12v12H6z",doc:"M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h6"});
 const swFmt=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
-function SwAudio(){const a=q.useRef(null),box=q.useRef(null),[on,setOn]=q.useState(!1),[t,setT]=q.useState(0),[d,setD]=q.useState(0),[rate,setRate]=q.useState(1),[sc,setSc]=q.useState(!1),[err,setErr]=q.useState(!1);
+/* one audio element for the whole site: keeps playing when you change page */
+let swAEl=null;const swAS={on:!1,big:!1,err:!1};
+function swAud(){if(!swAEl){swAEl=new Audio();swAEl.preload="metadata";swAEl.src=SW_AUDIO;swAEl.addEventListener("play",()=>{swAS.on=!0;swAPing()});swAEl.addEventListener("error",()=>{swAS.err=!0;swAPing()})}return swAEl}
+const swAPing=()=>window.dispatchEvent(new Event("sw-aud"));
+function useSwAudio(){const[,f]=q.useReducer(x=>x+1,0);q.useEffect(()=>{const a=swAud(),ev=["play","pause","timeupdate","loadedmetadata","ended","ratechange"];ev.forEach(e=>a.addEventListener(e,f));window.addEventListener("sw-aud",f);return()=>{ev.forEach(e=>a.removeEventListener(e,f));window.removeEventListener("sw-aud",f)}},[]);return swAud()}
+const swAToggle=()=>{const a=swAud();a.paused?a.play().catch(()=>{swAS.err=!0;swAPing()}):a.pause()};
+const swAStop=()=>{const a=swAud();a.pause();a.currentTime=0;swAPing()};
+const swAClose=()=>{swAStop();swAS.on=!1;swAPing()};
+const swASeek=v=>{const a=swAud();if(isFinite(v)){a.currentTime=v;swAPing()}};
+const swARate=()=>{const a=swAud(),r=a.playbackRate===1?1.25:a.playbackRate===1.25?1.5:1;a.playbackRate=r};
+function SwAudio(){const a=useSwAudio(),root=q.useRef(null),box=q.useRef(null),[sc,setSc]=q.useState(!1);
+ const on=!a.paused,t=a.currentTime||0,d=isFinite(a.duration)?a.duration:0,rate=a.playbackRate||1;
+ q.useEffect(()=>{const el=root.current;if(!el||!("IntersectionObserver"in window))return;const io=new IntersectionObserver(([e])=>{swAS.big=e.isIntersecting;swAPing()},{threshold:.2});io.observe(el);return()=>{io.disconnect();swAS.big=!1;swAPing()}},[]);
  const S=typeof SW_SCRIPT!=="undefined"?SW_SCRIPT:null,cur=S?S.findIndex(x=>t>=x.s&&t<x.e+.4):-1;
- q.useEffect(()=>{if(!sc||cur<0||!box.current)return;const el=box.current.querySelector('[data-i="'+cur+'"]');if(el){const b=box.current,top=el.offsetTop-b.clientHeight/3;b.scrollTo({top,behavior:"smooth"})}},[cur,sc]);
- const toggle=()=>{const x=a.current;if(!x)return;x.paused?x.play().catch(()=>setErr(!0)):x.pause()};
- const stop=()=>{const x=a.current;if(!x)return;x.pause();x.currentTime=0;setT(0)};
- const seek=v=>{const x=a.current;if(x&&isFinite(v)){x.currentTime=v;setT(v)}};
- const cyc=()=>{const r=rate===1?1.25:rate===1.25?1.5:1;setRate(r);a.current&&(a.current.playbackRate=r)};
+ q.useEffect(()=>{if(!sc||cur<0||!box.current)return;const el=box.current.querySelector('[data-i="'+cur+'"]');if(el){const b=box.current;b.scrollTo({top:el.offsetTop-b.clientHeight/3,behavior:"smooth"})}},[cur,sc]);
  const pct=d?t/d*100:0;
- return swH("div",{className:"sw-aud"+(on?" is-on":"")},
-  swH("audio",{ref:a,src:SW_AUDIO,preload:"metadata",onPlay:()=>setOn(!0),onPause:()=>setOn(!1),onEnded:()=>{setOn(!1)},onTimeUpdate:x=>setT(x.currentTarget.currentTime),onLoadedMetadata:x=>setD(x.currentTarget.duration),onError:()=>setErr(!0)}),
+ return swH("div",{ref:root,className:"sw-aud"+(on?" is-on":"")},
   swH("div",{className:"sw-aud-row"},
-   swH("button",{type:"button",className:"sw-aud-play",onClick:toggle,"aria-label":on?"หยุดชั่วคราว":"เล่น"},swH(SwIcon,{n:on?"pause":"play",c:"sw-ic sw-fill"})),
+   swH("button",{type:"button",className:"sw-aud-play",onClick:swAToggle,"aria-label":on?"หยุดชั่วคราว":"เล่น"},swH(SwIcon,{n:on?"pause":"play",c:"sw-ic sw-fill"})),
    swH("div",{className:"sw-aud-main"},
-    swH("div",{className:"sw-aud-t"},swH("small",null,on?"กำลังเล่น":"ไม่มีเวลาอ่าน? ฟังแทนได้"),swH("b",null,"ฟังสรุปร่างแผนยุทธศาสตร์ 2570–2574")),
+    swH("div",{className:"sw-aud-t"},swH("small",null,on?"กำลังเล่น · เปลี่ยนหน้าได้ เสียงยังเล่นต่อ":"ไม่มีเวลาอ่าน? ฟังแทนได้"),swH("b",null,"ฟังสรุปร่างแผนยุทธศาสตร์ 2570–2574")),
     swH("div",{className:"sw-aud-bar"},
      swH("span",{className:"sw-aud-time"},swFmt(t)),
-     swH("div",{className:"sw-aud-track"},swH("i",{style:{width:pct+"%"}}),swH("input",{type:"range",min:0,max:d||0,step:.1,value:t,onChange:x=>seek(+x.target.value),"aria-label":"เลื่อนตำแหน่งเสียง"})),
+     swH("div",{className:"sw-aud-track"},swH("i",{style:{width:pct+"%"}}),swH("input",{type:"range",min:0,max:d||0,step:.1,value:t,onChange:x=>swASeek(+x.target.value),"aria-label":"เลื่อนตำแหน่งเสียง"})),
      swH("span",{className:"sw-aud-time"},d?swFmt(d):"--:--"))),
    swH("div",{className:"sw-aud-ctl"},
-    swH("button",{type:"button",className:"sw-aud-btn",onClick:stop,"aria-label":"หยุด",title:"หยุด"},swH(SwIcon,{n:"stop",c:"sw-ic-sm sw-fill"})),
-    swH("button",{type:"button",className:"sw-aud-btn sw-aud-rate",onClick:cyc,"aria-label":"ความเร็ว "+rate+" เท่า",title:"ความเร็ว"},rate+"×"),
+    swH("button",{type:"button",className:"sw-aud-btn",onClick:swAStop,"aria-label":"หยุด",title:"หยุด"},swH(SwIcon,{n:"stop",c:"sw-ic-sm sw-fill"})),
+    swH("button",{type:"button",className:"sw-aud-btn sw-aud-rate",onClick:swARate,"aria-label":"ความเร็ว "+rate+" เท่า",title:"ความเร็ว"},rate+"×"),
     S&&swH("button",{type:"button",className:"sw-aud-btn"+(sc?" is-on":""),onClick:()=>setSc(!sc),"aria-pressed":sc,title:"สคริปต์"},swH(SwIcon,{n:"doc",c:"sw-ic-sm"}),swH("span",null,"สคริปต์")))),
-  err&&swH("p",{className:"sw-aud-err"},"เล่นไฟล์เสียงไม่ได้ในเบราว์เซอร์นี้"),
+  swAS.err&&swH("p",{className:"sw-aud-err"},"เล่นไฟล์เสียงไม่ได้ในเบราว์เซอร์นี้"),
   S&&sc&&swH("div",{className:"sw-aud-sc",ref:box},
-   swH("p",{className:"sw-aud-note"},"สคริปต์ถอดเสียงอัตโนมัติ · แตะประโยคเพื่อข้ามไปฟังตรงนั้น"),
-   ...S.map((x,i)=>swH("p",{key:i,"data-i":i,className:"sw-aud-line"+(i===cur?" is-cur":i<cur?" is-past":""),onClick:()=>{seek(x.s);a.current&&a.current.paused&&toggle()}},swH("em",null,swFmt(x.s)),x.t))))}
+   swH("p",{className:"sw-aud-note"},"สคริปต์ · แตะประโยคเพื่อข้ามไปฟังตรงนั้น"),
+   ...S.map((x,i)=>swH("p",{key:i,"data-i":i,className:"sw-aud-line"+(i===cur?" is-cur":i<cur?" is-past":""),onClick:()=>{swASeek(x.s);a.paused&&swAToggle()}},swH("em",null,swFmt(x.s)),x.t))))}
+/* mini player: shows on every page once listening has started */
+function SwMiniPlayer(){const a=useSwAudio(),go=$f();
+ const show=swAS.on&&!swAS.big;
+ q.useEffect(()=>{document.body.classList.toggle("sw-has-mini",show)},[show]);
+ if(!show)return null;
+ const on=!a.paused,t=a.currentTime||0,d=isFinite(a.duration)?a.duration:0;
+ return swH("div",{className:"sw-mplayer",role:"region","aria-label":"เครื่องเล่นเสียงสรุปแผน"},
+  swH("i",{className:"sw-mplayer-prog",style:{width:(d?t/d*100:0)+"%"}}),
+  swH("button",{type:"button",className:"sw-mplayer-play",onClick:swAToggle,"aria-label":on?"หยุดชั่วคราว":"เล่น"},swH(SwIcon,{n:on?"pause":"play",c:"sw-ic sw-fill"})),
+  swH("button",{type:"button",className:"sw-mplayer-t",onClick:()=>go("/about",{state:{scrollTo:"sw-downloads"}}),title:"ไปที่เครื่องเล่นเต็ม"},swH("b",null,"ฟังสรุปร่างแผน 2570–2574"),swH("span",null,on?"กำลังเล่น":"หยุดชั่วคราว"," · ",swFmt(t)," / ",d?swFmt(d):"--:--")),
+  swH("button",{type:"button",className:"sw-mplayer-btn",onClick:swARate,title:"ความเร็ว"},(a.playbackRate||1)+"×"),
+  swH("button",{type:"button",className:"sw-mplayer-btn",onClick:swAClose,"aria-label":"ปิดเสียง",title:"หยุดและปิด"},swH(SwIcon,{n:"x",c:"sw-ic-sm"})))}
 
 function oS(){const{ready:n}=Wt();return n?m.jsx(lI,{children:m.jsxs(Yr,{element:m.jsx(zI,{}),children:[m.jsx(Yr,{index:!0,element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategies",element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategy/:id",element:m.jsx(GI,{})}),m.jsx(Yr,{path:"about",element:m.jsx(SwAbout,{})}),m.jsx(Yr,{path:"results",element:m.jsx(QI,{})}),m.jsx(Yr,{path:"passport",element:m.jsx(YI,{})}),swAdminOn()&&m.jsx(Yr,{path:"admin",element:m.jsx(ZI,{})}),m.jsx(Yr,{path:"*",element:m.jsx(nf,{})})]})}):m.jsx(Ko,{label:"กำลังเตรียมข้อมูล…"})}function aS(){return m.jsx(gI,{children:m.jsx(jI,{children:m.jsx(oS,{})})})}mT.createRoot(document.getElementById("root")).render(m.jsx(u0.StrictMode,{children:m.jsx(aS,{})}));const lS=()=>{};var Py={};/**
  * @license
@@ -4192,6 +4212,21 @@ button.sw-fcard{text-align:left;cursor:pointer;border:0;padding:0;font:inherit;c
 .sw-zl-n{font-weight:700;fill:#0B2A6F}
 .sw-zl-v{font-size:.82em;fill:#334155}
 .sw-zl.is-sel .sw-zl-n{fill:#1D4ED8}
+/* mini player */
+.sw-mplayer{position:fixed;z-index:45;right:20px;bottom:20px;width:min(400px,calc(100vw - 32px));display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem .65rem .6rem;border-radius:16px;color:#fff;background:linear-gradient(120deg,#0B2A6F,#1E40AF 70%,#2563EB);box-shadow:0 14px 34px rgba(11,42,111,.35);overflow:hidden;animation:swMiniIn .25s ease}
+@keyframes swMiniIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.sw-mplayer-prog{position:absolute;left:0;bottom:0;height:3px;background:#7DD3FC;transition:width .25s linear}
+.sw-mplayer-play{display:grid;place-items:center;flex-shrink:0;width:42px;height:42px;border-radius:50%;background:#fff;color:#1E40AF}
+.sw-mplayer-play .sw-ic{width:19px;height:19px}
+.sw-mplayer-t{flex:1;min-width:0;display:flex;flex-direction:column;text-align:left;line-height:1.3;color:#fff}
+.sw-mplayer-t b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw-mplayer-t span{font-size:.75rem;color:#BFDBFE;font-variant-numeric:tabular-nums}
+.sw-mplayer-t:hover b{text-decoration:underline;text-underline-offset:3px}
+.sw-mplayer-btn{display:grid;place-items:center;flex-shrink:0;min-width:36px;height:36px;padding:0 .45rem;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums}
+.sw-mplayer-btn:hover{background:rgba(255,255,255,.24)}
+body.sw-has-mini .sw-content{padding-bottom:90px}
+@media (max-width:1023px){.sw-mplayer{left:12px;right:12px;width:auto;bottom:calc(66px + env(safe-area-inset-bottom,0px))}body.sw-has-mini .sw-main{padding-bottom:140px}}
+@media (prefers-reduced-motion:reduce){.sw-mplayer{animation:none}}
 </style>
   
   
