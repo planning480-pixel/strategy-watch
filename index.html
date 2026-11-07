@@ -127,7 +127,7 @@ return swH("section",{className:"sw-wrap sw-vwrap"},swH("div",{className:"sw-vba
 function SwChips({value,onChange,pillars}){return swH("div",{className:"sw-chips",role:"group","aria-label":"กรองตามเสาหลัก"},
  swH("button",{type:"button",className:"sw-chip"+(value==="all"?" is-on":""),style:{"--c":"#1E40AF"},"aria-pressed":value==="all",onClick:()=>onChange("all")},"ทั้งหมด"),
  ...pillars.map(p=>swH("button",{key:p.code,type:"button",className:"sw-chip"+(value===p.code?" is-on":""),style:{"--c":p.color},"aria-pressed":value===p.code,onClick:()=>onChange(p.code)},swH("b",null,p.code),p.th)))}
-function SwAbout(){const{content:n}=Wt(),d=swData(n),pl=n.pillars,st=n.strategies,swLc=na();q.useEffect(()=>{const t=swLc.state&&swLc.state.scrollTo;if(t){const e=document.getElementById(t);e&&setTimeout(()=>e.scrollIntoView({behavior:"smooth",block:"start"}),120)}},[swLc.key]);
+function SwAbout(){const{content:n}=Wt(),d=swData(n),pl=n.pillars,st=n.strategies,swLc=na();const[wi,setWi]=q.useState(-1);q.useEffect(()=>{const f=e=>setWi(e.detail);window.addEventListener("sw-why",f);return()=>window.removeEventListener("sw-why",f)},[]);q.useEffect(()=>{const t=swLc.state&&swLc.state.scrollTo;if(t){const e=document.getElementById(t);e&&setTimeout(()=>e.scrollIntoView({behavior:"smooth",block:"start"}),120)}},[swLc.key]);
 let rf=null,rt=null;const k=d.rs.indexOf(" สู่");if(d.rs.startsWith("จาก")&&k>0){rf=d.rs.slice(3,k).trim();rt=d.rs.slice(k+4).trim()}
 const jump=id=>{const e=document.getElementById(id);e&&e.scrollIntoView({behavior:"smooth",block:"start"})};
 const toc=[["sw-downloads","ดาวน์โหลด","download"],["sw-house","บ้านยุทธศาสตร์","compass"],["sw-why","5 โจทย์","telescope"],["sw-flow","ที่มาของแผน","flag"]];
@@ -148,14 +148,14 @@ return swH("div",{className:"sw-about"},
  swH(SwHouse,null),
  swH("section",{id:"sw-why",className:"sw-band"},swH("div",{className:"sw-wrap sw-sec"},
   swH("div",{className:"sw-sub"},swH("div",{className:"sw-eyebrow"},swH(SwIcon,{n:"telescope",c:"sw-ic-sm"}),"Why · Strategic Foresight"),swH("h2",{className:"sw-h2"},"5 โจทย์ที่กรมรอไม่ได้"),n.foresightSource&&swH("p",{className:"sw-lead"},n.foresightSource)),
-  swH("div",{className:"sw-fgrid"},...d.fs.map((f,i)=>swH("article",{key:i,className:"sw-fcard",style:{"--c":f.color||"#2563EB"}},
+  swH("div",{className:"sw-fgrid"},...d.fs.map((f,i)=>swH("button",{type:"button",key:i,className:"sw-fcard",style:{"--c":f.color||"#2563EB"},onClick:()=>setWi(i),"aria-label":"อ่านเพิ่ม: "+f.title},
    f.image?swH("div",{className:"sw-fimg"},swH("img",{src:f.image,alt:""})):null,
    swH("div",{className:"sw-fbody"},
     swH("div",{className:"sw-fhead"},swH("span",{className:"sw-fno"},String(i+1).padStart(2,"0")),f.tag&&swH("span",{className:"sw-ftag"},f.tag)),
-    swH("h3",null,f.title),swH("p",null,f.desc))))))),
+    swH("h3",null,f.title),swH("p",null,f.desc),swH("span",{className:"sw-fmore"},"กระทบกรมอย่างไร",swH(SwIcon,{n:"chev",c:"sw-ic-xs"})))))),swH(SwWhyModal,{i:wi,onClose:()=>setWi(-1)}))),
  swH("section",{id:"sw-flow",className:"sw-band"},swH("div",{className:"sw-wrap sw-sec"},
   swH("div",{className:"sw-sub"},swH("div",{className:"sw-eyebrow"},swH(SwIcon,{n:"flag",c:"sw-ic-sm"}),"From foresight to action"),swH("h2",{className:"sw-h2"},"ที่มาของแผน")),
-  swH("ol",{className:"sw-flow"},...flow.map(([ic,t,dsc],i)=>swH("li",{key:i},swH("span",{className:"sw-flow-ic"},swH(SwIcon,{n:ic})),swH("span",{className:"sw-flow-no"},"ขั้นที่ ",i+1),swH("b",null,t),swH("span",{className:"sw-flow-d"},dsc)))),
+  swH("ol",{className:"sw-flow"},...flow.map(([ic,t,dsc],i)=>swH("li",{key:i},swH("span",{className:"sw-flow-ic"},swH(SwIcon,{n:ic})),swH("span",{className:"sw-flow-no"},"ขั้นที่ ",i+1,i===flow.length-1&&swH("em",{className:"sw-flow-now"},"ตอนนี้")),swH("b",null,t),swH("span",{className:"sw-flow-d"},dsc),i===flow.length-1&&swH(Ln,{to:"/",className:"sw-flow-go"},"ให้คะแนนเลย",swH(SwIcon,{n:"arrow",c:"sw-ic-sm"}))))),
   swH("div",{className:"sw-cta"},
    swH("div",null,swH("h3",null,"ร่างแผนนี้ยังปรับได้ ด้วยความเห็นของคุณ"),swH("p",null,"ให้คะแนนและเสนอแนะ ",st.length," กลยุทธ์ · ไม่เก็บชื่อผู้ให้ความเห็น")),
    swH("div",{className:"sw-cta-btns"},swH(Ln,{to:"/",className:"sw-btn"},"เริ่มให้คะแนน",swH(SwIcon,{n:"arrow",c:"sw-ic-sm"})),swH(Ln,{to:"/results",className:"sw-btn is-ghost"},"ดูสรุปผล")))))
@@ -429,6 +429,24 @@ function SwDownloads(){const[msg,setMsg]=q.useState({}),canShare=!window.claude;
    swH("div",{className:"sw-dlb"},swH("small",null,f.meta),swH("h3",null,f.title),swH("b",null,f.sub),swH("p",null,f.desc),
     swH("div",{className:"sw-dlbtns"},swH("button",{type:"button",className:"sw-dl",onClick:()=>swSave(f.data,f.file)},swH(SwIcon,{n:"download",c:"sw-ic-sm"}),"ดาวน์โหลด"),
      canShare&&swH("button",{type:"button",className:"sw-dl is-ghost",onClick:()=>share(f)},swH(SwIcon,{n:msg[f.id]?"check":"share",c:"sw-ic-sm"}),msg[f.id]?"คัดลอกลิงก์แล้ว":"ส่งต่อ"))))))) }
+const SW_FS_MORE=[
+ {impact:["สินค้าที่เป็นฐานภาษีหลัก เช่น น้ำมัน รถยนต์ สุรา และยาสูบ เปลี่ยนตามพฤติกรรมผู้บริโภคและเทคโนโลยี รายได้จากฐานเดิมจึงมีแนวโน้มลดลงและผันผวนขึ้น","ภาระการคลังของประเทศยังกดดันเป้าการจัดเก็บ กรมต้องรู้ฐาน คาดการณ์ และบริหารรายได้ให้แม่นยำขึ้น","ต้องปกป้องฐานหลัก ปรับโครงสร้างภาษี และเปิดฐานใหม่อย่างมีหลักเกณฑ์"],pillars:["BA","C"]},
+ {impact:["มาตรการภาษีมีผลต่อต้นทุนและการตัดสินใจลงทุน จึงต้องออกแบบให้หนุนอุตสาหกรรมเป้าหมาย ไม่ใช่เพิ่มภาระ","ผู้ประกอบการคาดหวังกติกาชัด ปฏิบัติง่าย และภาระการปฏิบัติตามที่ลดลง","กติกาสากล เช่น มาตรฐาน OECD ทำให้กฎหมายและมาตรการภาษีต้องปรับให้ทัน"],pillars:["BA","C","E"]},
+ {impact:["ภาษีสินค้าที่กระทบสุขภาพ เช่น สุรา ยาสูบ และเครื่องดื่มที่มีน้ำตาล ถูกคาดหวังให้ช่วยลดการบริโภคและลดภาระทางสุขภาพ ไม่ใช่วัดแค่รายได้","ต้องหาจุดสมดุลของอัตราภาษี เพราะภาษีที่สูงเกินไปอาจทำให้สินค้าหนีภาษีและการลักลอบเพิ่มขึ้น","กรมต้องวัด “ผลของมาตรการภาษี” ต่อสังคมได้ชัดเจน"],pillars:["BA","C"]},
+ {impact:["การเปลี่ยนไปใช้รถยนต์ไฟฟ้าและพลังงานสะอาด กระทบรายได้ภาษีน้ำมันและรถยนต์เครื่องยนต์สันดาปโดยตรง","กติกาคาร์บอนของโลกและกฎหมายด้านการเปลี่ยนแปลงสภาพภูมิอากาศ ทำให้ภาษีต้องมีบทบาทจูงใจการลดการปล่อยคาร์บอน","ต้องออกแบบภาษีให้หนุนการเปลี่ยนผ่านอย่างเป็นธรรม พร้อมหาฐานรายได้ทดแทน"],pillars:["BA"]},
+ {impact:["งานจัดเก็บ ตรวจสอบ และบริการจำนวนมากยังทำด้วยมือ AI และข้อมูลจะช่วยให้ทำงานเร็วขึ้น แม่นยำขึ้น และตรวจตามความเสี่ยงได้","คนน้อยลงแต่งานเข้มข้นขึ้น บุคลากรจึงต้องมีทักษะด้าน Data และ AI","ระบบดิจิทัลช่วยลดการใช้ดุลพินิจ เพิ่มความโปร่งใส และลดช่องทางทุจริต แต่ต้องดูแลความปลอดภัยไซเบอร์ควบคู่กันไป"],pillars:["N","LA","E"]}];
+function SwWhyModal({i,onClose}){const{content:n,pillar:pl}=Wt(),d=swData(n),f=i>=0?d.fs[i]:null,m=i>=0?SW_FS_MORE[i]:null;
+ return swH(VI,{open:i>=0,onClose},f&&swH("div",{className:"sw-wm",style:{"--c":f.color||"#2563EB"}},
+  f.image&&swH("div",{className:"sw-wm-img"},swH("img",{src:f.image,alt:""}),swH("button",{type:"button",className:"sw-iconbtn sw-wm-x",onClick:onClose,"aria-label":"ปิด"},swH(SwIcon,{n:"x",c:"sw-ic-sm"}))),
+  swH("div",{className:"sw-wm-b"},
+   swH("div",{className:"sw-wm-h"},swH("span",{className:"sw-fno"},"โจทย์ที่ ",String(i+1).padStart(2,"0")),f.tag&&swH("span",{className:"sw-ftag"},f.tag)),
+   swH("h3",null,f.title),swH("p",{className:"sw-wm-d"},f.desc),
+   m&&swH("div",{className:"sw-wm-imp"},swH("h4",null,swH(SwIcon,{n:"target",c:"sw-ic-sm"}),"กระทบกรมสรรพสามิตอย่างไร"),swH("ul",null,...m.impact.map((x,k)=>swH("li",{key:k},x)))),
+   m&&swH("div",{className:"sw-wm-p"},swH("small",null,"เสาหลักที่ตอบโจทย์นี้"),swH("div",null,...m.pillars.map(c=>{const p=pl(c);return swH("span",{key:c,style:{"--pc":p.color}},swH("b",null,c),p.th)}))),
+   swH("div",{className:"sw-wm-nav"},
+    swH("button",{type:"button",className:"sw-dl is-ghost",disabled:i<=0,onClick:()=>window.dispatchEvent(new CustomEvent("sw-why",{detail:i-1}))},swH(SwIcon,{n:"back",c:"sw-ic-sm"}),"ก่อนหน้า"),
+    swH("span",null,i+1," / ",d.fs.length),
+    swH("button",{type:"button",className:"sw-dl is-ghost",disabled:i>=d.fs.length-1,onClick:()=>window.dispatchEvent(new CustomEvent("sw-why",{detail:i+1}))},"ถัดไป",swH(SwIcon,{n:"chev",c:"sw-ic-sm"}))))))}
 
 function oS(){const{ready:n}=Wt();return n?m.jsx(lI,{children:m.jsxs(Yr,{element:m.jsx(zI,{}),children:[m.jsx(Yr,{index:!0,element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategies",element:m.jsx(nf,{})}),m.jsx(Yr,{path:"strategy/:id",element:m.jsx(GI,{})}),m.jsx(Yr,{path:"about",element:m.jsx(SwAbout,{})}),m.jsx(Yr,{path:"results",element:m.jsx(QI,{})}),m.jsx(Yr,{path:"passport",element:m.jsx(YI,{})}),swAdminOn()&&m.jsx(Yr,{path:"admin",element:m.jsx(ZI,{})}),m.jsx(Yr,{path:"*",element:m.jsx(nf,{})})]})}):m.jsx(Ko,{label:"กำลังเตรียมข้อมูล…"})}function aS(){return m.jsx(gI,{children:m.jsx(jI,{children:m.jsx(oS,{})})})}mT.createRoot(document.getElementById("root")).render(m.jsx(u0.StrictMode,{children:m.jsx(aS,{})}));const lS=()=>{};var Py={};/**
  * @license
@@ -4062,6 +4080,48 @@ a.card:hover{transform:translateY(-3px)}
 .sw-listen-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:.4rem;min-height:46px;padding:0 1.3rem;border-radius:999px;background:#fff;color:#1E40AF;font-weight:700}
 @media (max-width:767px){.sw-listen{flex-wrap:wrap}.sw-listen-btn{width:100%;justify-content:center}}
 @media (prefers-reduced-motion:reduce){.sw-listen-ic i{animation:none}}
+/* foresight cards: aligned + clickable */
+button.sw-fcard{text-align:left;cursor:pointer;border:0;padding:0;font:inherit;color:inherit}
+.sw-fhead{flex-direction:column;align-items:flex-start;gap:.35rem}
+.sw-ftag{white-space:nowrap}
+.sw-fbody{display:flex;flex-direction:column;flex:1}
+.sw-fcard p{flex:1}
+.sw-fmore{display:inline-flex;align-items:center;gap:.25rem;margin-top:.7rem;font-size:.8rem;font-weight:600;color:var(--c)}
+.sw-fcard:hover .sw-fmore{text-decoration:underline;text-underline-offset:3px}
+.sw-fcard:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+@media (max-width:1180px){.sw-ftag{white-space:normal}}
+/* why modal */
+.sw-wm{margin:-1.5rem;border-radius:inherit;overflow:hidden}
+.sw-wm-img{position:relative;height:170px;background:#F5F6F8}
+.sw-wm-img img{width:100%;height:100%;object-fit:cover;display:block}
+.sw-wm-x{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92)}
+.sw-wm-b{padding:1.1rem 1.4rem 1.3rem;border-top:4px solid var(--c)}
+.sw-wm-h{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.sw-wm .sw-fno{font-size:.8rem;font-weight:800;color:var(--c)}
+.sw-wm .sw-ftag{font-size:.75rem;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff);padding:.15rem .55rem;border-radius:6px;white-space:normal}
+.sw-wm h3{margin:.5rem 0 0;font-size:1.45rem;font-weight:700;color:#0F1115}
+.sw-wm-d{margin:.2rem 0 0;color:#5F6670}
+.sw-wm-imp{margin-top:1rem;padding:.9rem 1rem;border-radius:14px;background:#F7F9FC}
+.sw-wm-imp h4{display:flex;align-items:center;gap:.4rem;margin:0 0 .5rem;font-size:.95rem;font-weight:700;color:#0B2A6F}
+.sw-wm-imp h4 svg{color:var(--c)}
+.sw-wm-imp ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.55rem}
+.sw-wm-imp li{position:relative;padding-left:1.1rem;font-size:.92rem;line-height:1.55;color:#1F2937}
+.sw-wm-imp li:before{content:"";position:absolute;left:.15rem;top:.6em;width:7px;height:7px;border-radius:50%;background:var(--c)}
+.sw-wm-p{margin-top:.9rem}
+.sw-wm-p small{display:block;font-size:.75rem;font-weight:600;color:#8A93A0;margin-bottom:.35rem}
+.sw-wm-p>div{display:flex;flex-wrap:wrap;gap:.4rem}
+.sw-wm-p span{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .65rem;border-radius:999px;font-size:.8rem;color:#1F2937;background:color-mix(in srgb,var(--pc) 9%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 30%,#fff)}
+.sw-wm-p span b{color:var(--pc)}
+.sw-wm-nav{display:flex;align-items:center;justify-content:space-between;margin-top:1.1rem}
+.sw-wm-nav span{font-size:.8rem;color:#8A93A0}
+.sw-wm-nav .sw-dl{min-height:38px;font-size:.84rem}
+.sw-wm-nav .sw-dl:disabled{opacity:.35;pointer-events:none}
+/* flow step 5 */
+.sw-flow-now{margin-left:.4rem;font-style:normal;font-size:.68rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;background:#2563EB;color:#fff;vertical-align:middle}
+.sw-flow-go{display:inline-flex;align-items:center;gap:.3rem;margin-top:.5rem;font-size:.85rem;font-weight:700;color:#1D4ED8}
+.sw-flow-go:hover{text-decoration:underline;text-underline-offset:3px}
+.sw-wm{margin:-1.25rem}
+@media (min-width:640px){.sw-wm{margin:-1.75rem}}
 </style>
   
   
