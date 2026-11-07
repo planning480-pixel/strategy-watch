@@ -59,5 +59,20 @@ service cloud.firestore {
         || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden', 'featured']));
       allow delete: if false;
     }
+
+    // ความเห็นต่อวิสัยทัศน์ (1 คน 1 ความเห็นต่อหัวข้อ แก้ได้)
+    match /feedback/{id} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && id == request.auth.uid + '_' + request.resource.data.topic
+        && request.resource.data.topic in ['vision']
+        && request.resource.data.stars is int && request.resource.data.stars >= 1 && request.resource.data.stars <= 5
+        && request.resource.data.comment is string && request.resource.data.comment.size() <= 1000
+        && request.resource.data.hasComment == (request.resource.data.comment.size() > 0)
+        && request.resource.data.unitId is string && request.resource.data.unitId.size() <= 20
+        && request.resource.data.hidden == (resource == null ? false : resource.data.hidden);
+      allow delete: if false;
+    }
   }
 }
