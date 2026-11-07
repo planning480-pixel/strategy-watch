@@ -260,7 +260,7 @@ function k0({open:n,onClose:e,onPicked:t}){const{units:i,unit:o,setUnit:l}=Wt(),
    ...list.map(u=>swH("button",{key:u.id,type:"button",className:"sw-pk-item"+((sel==null?void 0:sel.id)===u.id?" is-on":"")+(u.group==="region"?" is-office":""),onClick:()=>setSel(u)},
      swH("span",null,u.group==="central"?u.name:u.short,qs&&u.group!=="central"&&swH("small",null,"ภาค ",u.rg)),(sel==null?void 0:sel.id)===u.id&&swH(SwIcon,{n:"check",c:"sw-ic-sm"}))),
    list.length===0&&swH("div",{className:"sw-empty"},"ไม่พบหน่วยงาน ลองพิมพ์คำอื่น")),
-  swH("button",{type:"button",className:"sw-pk-ok",disabled:!sel,onClick:ok},sel?"ยืนยัน: "+sel.short:"เลือกหน่วยงาน")))}
+  swH("div",{className:"sw-pk-foot"},swH("button",{type:"button",className:"sw-pk-ok",disabled:!sel,onClick:ok},sel?"ยืนยัน: "+sel.short:"แตะเลือกหน่วยงานด้านบน"))))}
 
 function SwUnitNudge(){const{unit:u}=Wt();if(u)return null;
  return swH("div",{className:"sw-wrap sw-nudge-w"},swH("div",{className:"sw-nudge"},swH(SwIcon,{n:"building",c:"sw-ic-sm"}),swH("span",null,swH("b",null,"ยังไม่ได้เลือกหน่วยงาน"),"เลือกครั้งเดียว ความเห็นของคุณจะนับให้หน่วยงานในหน้าสรุปผล"),swH("button",{type:"button",onClick:swOpenPicker},"เลือกหน่วยงาน")))}
@@ -4345,6 +4345,12 @@ html{scrollbar-width:thin;scrollbar-color:rgba(100,116,139,.32) transparent}
 .sw-ov-g{height:clamp(630px,calc(100vh - 290px),820px)}
 .sw-pbars{gap:.4rem}
 @media (max-width:767px){.sw-fimg{aspect-ratio:1/1}}
+/* unit picker: confirm button always visible */
+.sw-pk-list{max-height:min(42vh,360px)}
+.sw-pk-foot{position:sticky;bottom:-1.25rem;z-index:2;margin:0 -1.25rem -1.25rem;padding:.75rem 1.25rem calc(1rem + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(255,255,255,0),#fff 22%);}
+.sw-pk-foot .sw-pk-ok{width:100%}
+@media (min-width:640px){.sw-pk-foot{bottom:-1.75rem;margin:0 -1.75rem -1.75rem;padding:.8rem 1.75rem 1.4rem}}
+@media (max-height:700px){.sw-pk-list{max-height:34vh}.sw-pk-h p{display:none}}
 </style>
   
   
